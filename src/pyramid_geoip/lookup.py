@@ -232,7 +232,7 @@ class GeoIPLookupUtility(object):
     
 
 
-def get_geoip_lookup(request, lookup_iface=None):
+def get_geoip_lookup(request, ip_address=None, lookup_iface=None):
     """Lookup and return the geoip_lookup utility.
       
       Setup::
@@ -246,26 +246,23 @@ def get_geoip_lookup(request, lookup_iface=None):
       
       Returns a function that will get data for an ip address::
       
-          >>> geoip = get_geoip_lookup(mock_request, lookup_iface=mock_iface)
-          >>> mock_request.registry.getUtility.assert_called_with(mock_iface)
-          >>> geoip('ip address')
+          >>> get_geoip_lookup(mock_request, 'ip address', lookup_iface=mock_iface)
           'data'
+          >>> mock_request.registry.getUtility.assert_called_with(mock_iface)
           >>> mock_geoip.lookup.assert_called_with('ip address')
           
       If no ip address is provided, will use the ``REMOTE_ADDR``::
       
           >>> mock_request.headers = {}
           >>> mock_request.environ = {'REMOTE_ADDR': 'remote ip'}
-          >>> geoip = get_geoip_lookup(mock_request, lookup_iface=mock_iface)
-          >>> geoip()
+          >>> get_geoip_lookup(mock_request, lookup_iface=mock_iface)
           'data'
           >>> mock_geoip.lookup.assert_called_with('remote ip')
       
       Or the ``X-Forwarded-For`` header if available::
       
           >>> mock_request.headers = {'X-Forwarded-For': 'proxied / load balanced ip'}
-          >>> geoip = get_geoip_lookup(mock_request, lookup_iface=mock_iface)
-          >>> geoip()
+          >>> get_geoip_lookup(mock_request, lookup_iface=mock_iface)
           'data'
           >>> mock_geoip.lookup.assert_called_with('proxied / load balanced ip')
       
@@ -281,9 +278,10 @@ def get_geoip_lookup(request, lookup_iface=None):
     # Get the ip address -- either directly from the remote address in the
     # WSGI environment, or from the X-Forwarded-For header if provided,
     # e.g.: when running behind a load balancer or proxy.
-    remote_address = request.environ.get('REMOTE_ADDR')
-    ip_address = request.headers.get('X-Forwarded-For', remote_address)
+    if ip_address is None:
+        remote_address = request.environ.get('REMOTE_ADDR')
+        ip_address = request.headers.get('X-Forwarded-For', remote_address)
     
     # Return its lookup method with the ip_address defaulted to the current request.
-    return lambda ip_address=ip_address: geoip.lookup(ip_address)
+    return geoip.lookup(ip_address)
 
