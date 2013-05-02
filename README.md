@@ -73,6 +73,26 @@ Note that you may want to:
    application will hang starting up until the data is available)
 1. schedule this to run monthly
 
+## Tests
+
+To run the tests, `pip install nose coverage mock` and e.g.:
+
+    $ nosetests pyramid_geoip --with-doctest --with-coverage --cover-tests --cover-package pyramid_geoip
+    ......
+    Name                       Stmts   Miss  Cover   Missing
+    --------------------------------------------------------
+    pyramid_geoip                 10      0   100%   
+    pyramid_geoip.interfaces       4      0   100%   
+    pyramid_geoip.lookup          69      0   100%   
+    pyramid_geoip.update          12      0   100%   
+    --------------------------------------------------------
+    TOTAL                         95      0   100%   
+    ----------------------------------------------------------------------
+    Ran 6 tests in 0.041s
+    
+    OK
+
+
 [pyramid_geoip]: https://github.com/thruflo/pyramid_geoip
 [MaxMind]: http://www.maxmind.com/en/home
 [Pyramid]: http://pyramid.readthedocs.org

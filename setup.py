@@ -51,7 +51,6 @@ setup(
     tests_require = [
         'coverage',
         'nose',
-        'mock',
-        'WebTest>=1.3.1',
+        'mock'
     ]
 )
