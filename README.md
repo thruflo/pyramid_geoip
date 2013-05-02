@@ -2,8 +2,13 @@
 / SQLAlchemy web application. You can use it to locate incoming requests by
 their IP address:
 
-    request.geoip('89.16.224.130')['city']
-    -> 'London'
+    data = request.geoip('89.16.224.130')
+
+    data['city'], data['country_code']
+    -> 'London', 'GB'
+    
+    data['latitude'], data['longitude']
+    -> 51.514199999999988, -0.093099999999992633
 
 Note that [pyramid_geoip][] stores GeoIP data in an *SQL database* (as opposed
 to storing it on the filesystem) and reads all the data (many MB) into *memory*
