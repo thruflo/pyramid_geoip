@@ -8,6 +8,8 @@
   
 """
 
+from pyramid.settings import asbool
+
 from .interfaces import IGeoIPLookupUtility
 from .lookup import GeoIPLookupUtility
 from .lookup import get_geoip_lookup
@@ -20,6 +22,7 @@ def includeme(config, get_geoip=None, lookup_cls=None, lookup_iface=None):
       
           >>> from mock import Mock
           >>> mock_config = Mock()
+          >>> mock_config.registry.settings = {}
           >>> mock_get_geoip = Mock()
           >>> mock_lookup_cls = Mock()
           >>> mock_lookup = mock_lookup_cls.return_value
@@ -51,10 +54,13 @@ def includeme(config, get_geoip=None, lookup_cls=None, lookup_iface=None):
     
     # Unpack.
     registry = config.registry
+    settings = registry.settings
     
     # Instantiate and setup the clients.
     geoip_lookup = lookup_cls(registry.settings)
-    geoip_lookup.setup_clients()
+    should_setup = asbool(settings.get('geoip.setup_clients', True))
+    if should_setup:
+        geoip_lookup.setup_clients()
     
     # Register the utililty.
     registry.registerUtility(geoip_lookup, lookup_iface)

@@ -9,6 +9,7 @@ __all__ = [
 import logging
 logger = logging.getLogger(__name__)
 
+import os
 import pygeoip
 import transaction
 
@@ -24,9 +25,11 @@ IP_TYPES = ['ip4', 'ip6']
 stub = u'https://geolite.maxmind.com/download/geoip/database'
 DEFAULTS = {
     u'geoip.cities_ip4_name': u'GeoLiteCity',
+    u'geoip.cities_ip4_path': u'vendor/GeoLiteCity.dat',
     u'geoip.cities_ip4_url': u'{0}/GeoLiteCity.dat.gz'.format(stub),
     u'geoip.cities_ip6_name': u'GeoLiteCityv6',
-    u'geoip.cities_ip6_url': u'{0}/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz'.format(stub)
+    u'geoip.cities_ip6_path': u'vendor/GeoLiteCityv6.dat',
+    u'geoip.cities_ip6_url': u'{0}/GeoLiteCityv6-beta/GeoLiteCityv6.dat.gz'.format(stub),
 }
 
 @implementer(IGeoIPLookupUtility)
@@ -126,6 +129,7 @@ class GeoIPLookupUtility(object):
                 return client.record_by_addr(ip_address)
             except Exception:
                 continue
+        return {}
     
     def get_blob(self, name, url):
         """Store and return a blob called ``name`` containing the data
@@ -173,20 +177,26 @@ class GeoIPLookupUtility(object):
         
         return blob
     
-    def make_geoip(self, name, url):
+    def make_geoip(self, name, path, url):
         """Instantiate and return a ``pygeoip.GeoIP`` instance."""
         
-        # Get the GeoIP data from the database as a named file.
-        with self.tx_manager:
-            blob = self.get_blob(name, url)
-            named_file = blob.get_as_named_tempfile(should_close=True)
-        filename = named_file.name
+        # Try the local filesystem.
+        if self.exists(path):
+            filename = path
+            should_delete = False
+        else: # Fallback on getting the data from the database as a named file.
+            with self.tx_manager:
+                blob = self.get_blob(name, url)
+                named_file = blob.get_as_named_tempfile(should_close=True)
+            filename = named_file.name
+            should_delete = True
         
         # Instantiate the client.
         geoip = self.geoip_cls(filename, self.access_flag)
         
         # Delete the temp file.
-        named_file.unlink(filename)
+        if should_delete:
+            named_file.unlink(filename)
         
         # Return the client.
         return geoip
@@ -202,15 +212,17 @@ class GeoIPLookupUtility(object):
             # Unpack / store the config.
             key = 'geoip.cities_{0}_name'.format(item)
             name = unicode(self.settings.get(key, defaults[key]))
+            key = 'geoip.cities_{0}_path'.format(item)
+            path = unicode(self.settings.get(key, defaults[key]))
             key = 'geoip.cities_{0}_url'.format(item)
             url = unicode(self.settings.get(key, defaults[key]))
-            self.databases.append({'name': name, 'url': url})
+            self.databases.append({'name': name, 'path': path, 'url': url})
             # Instantiate the client.
-            client = self.make_geoip(name, url)
+            client = self.make_geoip(name, path, url)
             self.clients.append(client)
     
     def force_update(self):
-        if hasattr(self, 'clients'):
+        if getattr(self, 'clients'):
             raise Exception('Must not call `force_update` after `setup_clients`.')
         self.should_force_update = True
         self.setup_clients()
@@ -221,11 +233,13 @@ class GeoIPLookupUtility(object):
         """
         
         # Compose.
+        self.clients = []
         self.settings = settings
         self.should_save = should_save
         self.should_force_update = False
         self.access_flag = kwargs.get('access_flag', pygeoip.MEMORY_CACHE)
         self.blob_cls = kwargs.get('blob_cls', Blob)
+        self.exists = kwargs.get('exists', os.path.exists)
         self.geoip_cls = kwargs.get('geoip_cls', pygeoip.GeoIP)
         self.save = kwargs.get('save', save_to_db)
         self.tx_manager = kwargs.get('tx_manager', transaction.manager)
