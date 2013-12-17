@@ -40,6 +40,12 @@ Optionally override the data sources, using your
     geoip.cities_ip4_url=https://example.com/GeoLiteCity.dat.gz
     geoip.cities_ip6_url=https://example.com/GeoLiteCityv6.dat.gz
 
+You can also use locally vendored data files, which will override the urls / 
+read from db machinery if present. The defaults looked for are:
+
+    geoip.cities_ip4_path=vendor/GeoLiteCity.dat
+    geoip.cities_ip6_path=vendor/GeoLiteCityv6.dat
+
 ## Use
 
 Use the utility provided at `request.geoip` to lookup data by IP address, e.g.
