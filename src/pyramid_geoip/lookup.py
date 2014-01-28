@@ -297,5 +297,15 @@ def get_geoip_lookup(request, ip_address=None, lookup_iface=None):
         ip_address = request.headers.get('X-Forwarded-For', remote_address)
     
     # Return its lookup method with the ip_address defaulted to the current request.
-    return geoip.lookup(ip_address)
+    data = geoip.lookup(ip_address)
+    if data:
+        for key in data:
+            value = data.get(key, None)
+            if value and isinstance(value, str):
+                try:
+                    value = value.decode('latin-1')
+                except UnicodeDecodeError:
+                    value = value.decode('utf-8')
+                data[key] = value
+    return data
 
