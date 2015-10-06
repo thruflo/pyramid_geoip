@@ -15,9 +15,9 @@ from .lookup import GeoIPLookupUtility
 def main(bootstrap=None, setup_logging=None, lookup_cls=None):
     """Run to instantiate a configured GeoIPLookupUtility and use it
       to update the stored GeoIP data.
-      
+
       Setup::
-      
+
           >>> from mock import Mock
           >>> PASTE_CONFIG = os.environ.get('PASTE_CONFIG')
           >>> mock_registry = Mock()
@@ -27,23 +27,23 @@ def main(bootstrap=None, setup_logging=None, lookup_cls=None):
           >>> mock_lookup_cls = Mock()
           >>> main(bootstrap=mock_bootstrap, setup_logging=mock_setup_logging,
           ...         lookup_cls=mock_lookup_cls)
-      
+
       Sets up logging::
-      
+
           >>> mock_setup_logging.assert_called_with(PASTE_CONFIG)
-      
+
       Bootstraps a pyramid environment::
-      
+
           >>> mock_bootstrap.assert_called_with(PASTE_CONFIG)
-      
+
       Instantiates a configured utility and calls force update::
-      
+
           >>> mock_lookup_cls.assert_called_with(mock_registry.settings,
           ...         should_save=True)
           >>> assert mock_lookup_cls.return_value.force_update.called
-      
+
     """
-    
+
     # Compose.
     if bootstrap is None: #pragma: no cover
         bootstrap = bootstrap_app
@@ -51,13 +51,13 @@ def main(bootstrap=None, setup_logging=None, lookup_cls=None):
         setup_logging = setup_log
     if lookup_cls is None: #pragma: no cover
         lookup_cls = GeoIPLookupUtility
-    
+
     paste_config = os.environ.get('PASTE_CONFIG')
     setup_logging(paste_config)
-    
+
     pyramid_environment = bootstrap(paste_config)
     settings = pyramid_environment['registry'].settings
-    
+
     lookup = lookup_cls(settings, should_save=True)
     lookup.force_update()
 
