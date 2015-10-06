@@ -9,12 +9,12 @@ def _read(file_name):
     text = sock.read()
     sock.close()
     return text
-    
+
 
 
 setup(
     name = 'pyramid_geoip',
-    version = '0.2.3',
+    version = '0.3',
     description = 'Integrate MaxMind GeoIP data with a Pyramid web application.',
     author = 'James Arthur',
     author_email = 'username: thruflo, domain: gmail.com',

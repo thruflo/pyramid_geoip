@@ -1,4 +1,8 @@
 
+## 0.3
+
+If given a list of IP addresses (`'76.85.208.38, 52.16.155.321'`) takes the first IP address rather than returning `None`.
+
 ## 0.2.2 / 0.2.3
 
 Bumped to ship package with and then without logging.
