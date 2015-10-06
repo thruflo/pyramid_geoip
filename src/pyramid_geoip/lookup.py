@@ -123,7 +123,10 @@ class GeoIPLookupUtility(object):
               }
           
         """
-        
+
+        if ip_address and hasattr(ip_address, 'split'):
+           ip_address = ip_address.split(',')[0].strip()
+
         for client in self.clients:
             try:
                 return client.record_by_addr(ip_address)
